@@ -46,13 +46,16 @@ if (cityBranches.length === 1) {
   ? cityBranches
   : own;
 
-  const nearest = findNearest(order, geoBranches);
+  const nearest = findNearestBranch(order, geoBranches);
   if (nearest) return { orderId: order.id, branchId: nearest.id, rule: 'geo' };
 
   return { orderId: order.id, branchId: null, rule: 'unassigned' };
 }
 
-function findNearest(order: Order, branches: Branch[]): Branch | null {
+export function findNearestBranch(
+  order: Order,
+  branches: Branch[],
+): Branch | null {
   if (order.lat === null || order.lon === null) return null;
 
   let best: Branch | null = null;
