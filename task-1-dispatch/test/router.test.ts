@@ -1,3 +1,4 @@
+// @rev kc-31
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { assignBranch } from '../src/router.ts';
@@ -63,7 +64,59 @@ test('geo: без координат заказ не распределяетс�
   assert.equal(res.rule, 'unassigned');
 });
 
-test.todo('pickup_point: пункт выдачи закреплён за филиалом');
-test.todo('city: в городе заказа один филиал магазина');
-test.todo('geo: если в городе несколько филиалов, выбирается ближайший из них');
+test('pickup_point: пункт выдачи закреплён за филиалом', () => {
+  const pickupBranch = branch({
+    id: 'b-pickup',
+    pickupPointIds: ['p-101'],
+  });
+
+  const res = assignBranch(
+    order({ pickupPointId: 'p-101' }),
+    [almaty, pickupBranch, astana]
+  );
+
+  assert.deepEqual(res, {
+    orderId: 'o-1',
+    branchId: 'b-pickup',
+    rule: 'pickup_point',
+  });
+});
+
+test('city: в городе заказа один филиал магазина', () => {
+  const otherCity = branch({
+    id: 'b-shymkent',
+    city: 'Шымкент',
+  });
+
+  const res = assignBranch(
+    order({ city: 'Алматы' }),
+    [almaty, otherCity, astana]
+  );
+
+  assert.deepEqual(res, {
+    orderId: 'o-1',
+    branchId: 'b-ala',
+    rule: 'city',
+  });
+});
+
+test('geo: если в городе несколько филиалов, выбирается ближайший из них', () => {
+  const almaty2 = branch({
+    id: 'b-ala-2',
+    city: 'Алматы',
+    lat: 43.26,
+    lon: 76.93,
+  });
+
+  const res = assignBranch(
+    order({ city: 'Алматы' }),
+    [almaty, almaty2, astana]
+  );
+
+  assert.deepEqual(res, {
+    orderId: 'o-1',
+    branchId: 'b-ala',
+    rule: 'geo',
+  });
+});
 test.todo('лимит: заполненный филиал пропускается');
